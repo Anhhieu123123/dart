@@ -1,39 +1,50 @@
-import 'package:intl/intl.dart';
+import 'package:sqlite3/sqlite3.dart';
 
 class Student {
   String id;
   String name;
-  DateTime dateOfBirth;
-  double score;
+  double mathScore;
+  double engScore;
 
-  // Constructor
   Student({
     required this.id,
     required this.name,
-    required this.dateOfBirth,
-    this.score = 0.0,
+    required this.mathScore,
+    required this.engScore,
   });
 
-  // Method 1: Lấy tuổi
-  int get age {
-    return DateTime.now().year - dateOfBirth.year;
+  double get averageScore => (mathScore + engScore) / 2;
+
+  String get rank {
+    if (averageScore >= 8.0) return 'Giỏi';
+    if (averageScore >= 6.5) return 'Khá';
+    if (averageScore >= 5.0) return 'Trung Bình';
+    return 'Yếu';
   }
 
-  // Method 2: In thông tin (Sử dụng intl để format ngày)
-  void showInfo() {
-    // Định dạng ngày tháng kiểu Việt Nam (dd/MM/yyyy)
-    String formattedDate = DateFormat('dd/MM/yyyy').format(dateOfBirth);
-
-    print('-------------------------');
-    print('SV: $name (ID: $id)');
-    print('Ngày sinh: $formattedDate (Tuổi: $age)');
-    print('Điểm: $score -> Xếp loại: ${_classify()}');
+  // 1. Chuyển từ Object -> Map (Để lưu vào DB)
+  // Tên key trong Map phải trùng tên cột trong Table
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'math_score': mathScore,
+      'eng_score': engScore,
+    };
   }
 
-  // Method private (chỉ dùng trong nội bộ class này)
-  String _classify() {
-    if (score >= 8.0) return 'Giỏi';
-    if (score >= 5.0) return 'Khá';
-    return 'Trung bình';
+  // 2. Chuyển từ Database Row -> Object (Để hiển thị lên App)
+  factory Student.fromRow(Row row) {
+    return Student(
+      id: row['id'] as String,
+      name: row['name'] as String,
+      mathScore: row['math_score'] as double,
+      engScore: row['eng_score'] as double,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'ID: $id | Tên: $name | ĐTB: ${averageScore.toStringAsFixed(1)}';
   }
 }
